@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>app-PLAYlist: Source Code Breakdown</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --border: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #f59e0b;
+    --server: #38bdf8;
+    --web: #a78bfa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 48px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.02rem; margin: 0 0 6px; }
+  p.lead { color: var(--muted); margin: 0 0 24px; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #1f2430;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  a { color: var(--accent); }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .card ul { margin: 0; padding-left: 18px; color: var(--muted); }
+  .card li { margin: 4px 0; }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .tag.server { background: rgba(56,189,248,.15); color: var(--server); }
+  .tag.web { background: rgba(167,139,250,.15); color: var(--web); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: #1c2029; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .flow { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .flow li {
+    counter-increment: step;
+    position: relative;
+    padding: 10px 14px 10px 52px;
+    margin-bottom: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .flow li::before {
+    content: counter(step);
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #111;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+  }
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 8px; }
+  .stat {
+    flex: 1 1 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat b { display: block; font-size: 1.5rem; color: var(--accent); }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  footer { margin-top: 56px; color: var(--muted); font-size: 0.85rem; }
+  @media (max-width: 640px) {
+    h1 { font-size: 1.6rem; }
+    th:nth-child(3), td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>app-PLAYlist: Source Code Breakdown</h1>
+  <p class="lead">A map of the server, the web app, and how they connect.</p>
+
+  <div class="stats">
+    <div class="stat"><b>~5,600</b><span>lines of TypeScript / TSX</span></div>
+    <div class="stat"><b>44</b><span>server files</span></div>
+    <div class="stat"><b>36</b><span>web files</span></div>
+    <div class="stat"><b>13</b><span>server tests (Vitest)</span></div>
+  </div>
+
+  <h2>Top level</h2>
+  <table>
+    <thead>
+      <tr><th>Path</th><th>What it is</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>server/</code></td><td>NestJS API with Prisma on PostgreSQL</td><td>Global prefix <code>/api</code></td></tr>
+      <tr><td><code>web/</code></td><td>React + Vite + Tailwind single-page app</td><td>TanStack Query, Zustand</td></tr>
+      <tr><td><code>docs/</code></td><td>Architecture and this page</td><td>Screenshots live here too</td></tr>
+      <tr><td><code>audio/</code></td><td>Uploaded audio files</td><td>Mounted into the container</td></tr>
+      <tr><td><code>REQUIREMENTS.md</code></td><td>Requirements by ID</td><td>e.g. FAV-1, ARC-1 to ARC-5</td></tr>
+      <tr><td>docker-compose.yml, Dockerfile, start.sh, stop.sh</td><td>Runs the app and Postgres</td><td>Docker-based setup</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Server <span style="color:var(--muted);font-size:0.9rem;font-weight:400">(<code>server/src</code>)</span></h2>
+  <p>The entry point is <code>main.ts</code>. A global <code>ValidationPipe</code> strips unknown request fields. <code>app.module.ts</code> wires the modules together.</p>
+
+  <div class="grid">
+    <div class="card">
+      <span class="tag server">Core</span>
+      <h3>tracks/</h3>
+      <ul>
+        <li>List, detail, create, update, delete routes</li>
+        <li>Favorites and archive (<code>PATCH :id/archive</code>)</li>
+        <li>Audio and artwork streaming</li>
+        <li><code>track.service.ts</code>: queries and sort order</li>
+        <li><code>track.view.ts</code>: response shaping</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag server">Browse</span>
+      <h3>albums/, people/</h3>
+      <ul>
+        <li>Albums with their tracks; album cover replacement</li>
+        <li>People grouped by role: composer, artist, lyricist, actor</li>
+        <li>Rename and delete a person (delete blocked with 409 while tracks are linked)</li>
+        <li>Detail endpoints accept <code>includeArchived</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag server">Collections</span>
+      <h3>playlists/</h3>
+      <ul>
+        <li>Create, rename, delete playlists</li>
+        <li>Add, remove, reorder tracks</li>
+        <li>Rejects archived tracks with 409</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag server">Auth</span>
+      <h3>auth/</h3>
+      <ul>
+        <li><code>AdminGuard</code> protects write routes</li>
+        <li>Token sent in the <code>x-admin-token</code> header</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag server">Metadata</span>
+      <h3>itunes/, languages/</h3>
+      <ul>
+        <li>Server-side proxy to the iTunes Search API</li>
+        <li>Language lookup</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag server">Shared</span>
+      <h3>common/, audio/, prisma/, health/</h3>
+      <ul>
+        <li><code>normalize.ts</code> and <code>audio-path.ts</code> helpers</li>
+        <li>HTTP error filter</li>
+        <li>Audio format rules and storage paths</li>
+        <li><code>PrismaService</code> shared across modules</li>
+        <li>Health check endpoint</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Data model</h2>
+  <p>Defined in <code>server/prisma/schema.prisma</code>. Migrations are in <code>prisma/migrations/</code>.</p>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Role</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Track</code></td><td>Core record</td><td><code>favorite</code> and <code>archived</code> flags</td></tr>
+      <tr><td><code>Album</code></td><td>Groups tracks</td><td></td></tr>
+      <tr><td><code>Person</code>, <code>PersonRoleLink</code>, <code>TrackPerson</code></td><td>People and their roles on tracks</td><td>Many-to-many via <code>TrackPerson</code></td></tr>
+      <tr><td><code>AlbumArtwork</code></td><td>Album cover image</td><td>One row per album</td></tr>
+      <tr><td><code>Playlist</code>, <code>PlaylistTrack</code></td><td>Playlists and their ordered tracks</td><td>Join table</td></tr>
+      <tr><td><code>Language</code></td><td>Language lookup</td><td></td></tr>
+      <tr><td><code>Setting</code></td><td>App-level settings</td><td></td></tr>
+      <tr><td>Enums</td><td><code>TrackType</code>, <code>PersonRole</code></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Web <span style="color:var(--muted);font-size:0.9rem;font-weight:400">(<code>web/src</code>)</span></h2>
+
+  <div class="grid">
+    <div class="card">
+      <span class="tag web">Entry</span>
+      <h3>main.tsx, App.tsx</h3>
+      <ul>
+        <li>Mounts the app</li>
+        <li>Defines routes and the layout</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag web">Pages</span>
+      <h3>pages/</h3>
+      <ul>
+        <li>One component per screen</li>
+        <li>Tracks, TrackDetail, TrackForm (add/edit)</li>
+        <li>Album, Person, People, AddPerson, ManagePeople, DeletePerson</li>
+        <li>Search, Home, Library, Favorites, Playlist</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag web">Components</span>
+      <h3>components/</h3>
+      <ul>
+        <li><code>TrackList.tsx</code>: shared track row and menu</li>
+        <li><code>YearPicker.tsx</code>: decade-grid year picker</li>
+        <li><code>PeoplePicker</code>, <code>ItunesPanel</code> (up to 3 matches), <code>SaveToPlaylistDialog</code></li>
+        <li><code>ChangeArtworkDialog</code>, <code>FavoriteHeart</code>, <code>QueueList</code></li>
+        <li><code>Modal</code>, <code>Artwork</code>, <code>AdminOnly</code> (route guard), <code>AdminModeControl</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag web">Data</span>
+      <h3>lib/</h3>
+      <ul>
+        <li><code>api.ts</code>: fetch wrapper and <code>ApiError</code></li>
+        <li><code>queries.ts</code>: one TanStack Query hook per endpoint</li>
+        <li><code>types.ts</code>: mirrors server response shapes</li>
+        <li><code>admin-store.ts</code>: Zustand store for the admin token</li>
+        <li><code>format.ts</code>: display helpers</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag web">Player</span>
+      <h3>player/</h3>
+      <ul>
+        <li><code>player-store.ts</code>: queue, index, repeat, shuffle</li>
+        <li><code>Player.tsx</code>: bottom bar and audio element</li>
+        <li><code>queue-item.ts</code>: track to queue entry</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Data flow</h2>
+  <ol class="flow">
+    <li>A page calls a hook in <code>lib/queries.ts</code>.</li>
+    <li>The hook calls <code>api.ts</code>, which requests <code>/api/...</code>. Vite proxies that to the server in dev.</li>
+    <li>The controller validates input with a DTO. The service runs Prisma queries.</li>
+    <li>A <code>*.view.ts</code> file shapes the response. TanStack Query caches it.</li>
+    <li>Writes call a mutation hook, which invalidates the affected queries.</li>
+  </ol>
+
+  <h2>Admin gating</h2>
+  <p>Admin-only features are gated in two places:</p>
+  <ul>
+    <li><strong>Web:</strong> hides or disables edit, delete, archive, and the archived-track filter.</li>
+    <li><strong>Server:</strong> <code>AdminGuard</code> protects the write routes.</li>
+  </ul>
+  <div class="note">
+    The read-side filter for archived tracks is a display filter, not a security boundary. The GET endpoints are not guarded, so the server still returns archived tracks to anyone who calls them directly.
+  </div>
+
+  <h2>Tests</h2>
+  <p>The server has Vitest specs next to the code, such as <code>normalize.spec.ts</code>, <code>audio-path.spec.ts</code>, and <code>auth.service.spec.ts</code>. The web app has no test suite. It relies on typechecking and lint.</p>
+
+  <footer>Generated from the repository on 2026-10-23.</footer>
+</main>
+</body>
+</html>

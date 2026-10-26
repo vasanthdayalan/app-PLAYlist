@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TrackType {
+  movie
+  indie
+
+  @@map("track_type")
+}
+
+enum PersonRole {
+  composer
+  artist
+  lyricist
+  actor
+
+  @@map("person_role")
+}
+
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
+}
+
+model Language {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  tracks Track[]
+
+  @@map("languages")
+}
+
+model Album {
+  id             Int           @id @default(autoincrement())
+  name           String
+  normalizedName String        @map("normalized_name")
+  year           Int
+  tracks         Track[]
+  artwork        AlbumArtwork?
+
+  @@unique([normalizedName, year])
+  @@map("albums")
+}
+
+model Person {
+  id             Int           @id @default(autoincrement())
+  name           String
+  normalizedName String        @unique @map("normalized_name")
+  roles          PersonRoleLink[]
+  trackLinks     TrackPerson[]
+
+  @@map("people")
+}
+
+model PersonRoleLink {
+  personId Int        @map("person_id")
+  role     PersonRole
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([personId, role])
+  @@map("person_roles")
+}
+
+model Track {
+  id                  Int       @id @default(autoincrement())
+  type                TrackType
+  albumId             Int       @map("album_id")
+  languageId          Int       @map("language_id")
+  trackName           String    @map("track_name")
+  normalizedTrackName String    @map("normalized_track_name")
+  year                Int
+  favorite            Boolean   @default(false)
+  archived            Boolean   @default(false)
+  durationSeconds     Int?      @map("duration_seconds")
+  audioPath           String?   @unique @map("audio_path")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  album         Album           @relation(fields: [albumId], references: [id], onDelete: Restrict)
+  language      Language        @relation(fields: [languageId], references: [id], onDelete: Restrict)
+  people        TrackPerson[]
+  playlistLinks PlaylistTrack[]
+
+  @@index([normalizedTrackName])
+  @@index([favorite])
+  @@index([archived])
+  @@map("tracks")
+}
+
+model AlbumArtwork {
+  albumId  Int    @id @map("album_id")
+  mimeType String @map("mime_type")
+  data     Bytes
+
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@map("album_artwork")
+}
+
+model TrackPerson {
+  trackId  Int        @map("track_id")
+  personId Int        @map("person_id")
+  role     PersonRole
+  position Int        @default(0)
+
+  track  Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@id([trackId, personId, role])
+  @@map("track_people")
+}
+
+model Playlist {
+  id        Int             @id @default(autoincrement())
+  name      String
+  createdAt DateTime        @default(now()) @map("created_at")
+  tracks    PlaylistTrack[]
+
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  playlistId Int @map("playlist_id")
+  trackId    Int @map("track_id")
+  position   Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, trackId])
+  @@unique([playlistId, position])
+  @@map("playlist_tracks")
+}

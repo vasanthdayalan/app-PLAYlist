@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLAYlist - Architecture</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #171717;
+    --panel-2: #1f1f1f;
+    --line: #2e2e2e;
+    --text: #f5f5f5;
+    --muted: #a3a3a3;
+    --accent: #e5e5e5;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --violet: #a78bfa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header.hero {
+    padding: 64px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    background: radial-gradient(ellipse at top, #1f1f1f 0%, var(--bg) 70%);
+  }
+  .hero h1 { font-size: 40px; margin: 0 0 8px; letter-spacing: -0.5px; }
+  .hero p { color: var(--muted); margin: 0 auto; max-width: 640px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
+  .pill {
+    font-size: 12px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+  section { margin-top: 48px; }
+  h2 { font-size: 22px; margin: 0 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .grid { display: grid; gap: 16px; }
+  .grid.three { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-bottom: 10px;
+  }
+  .t-web { background: rgba(59,130,246,.15); color: #93c5fd; }
+  .t-api { background: rgba(34,197,94,.15); color: #86efac; }
+  .t-db  { background: rgba(245,158,11,.15); color: #fcd34d; }
+  .t-fs  { background: rgba(167,139,250,.15); color: #c4b5fd; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; color: #e5e5e5; }
+
+  /* Flow diagram */
+  .diagram {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px 20px;
+  }
+  .layer {
+    display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: stretch;
+    padding: 14px 0; border-bottom: 1px dashed var(--line);
+  }
+  .layer:last-child { border-bottom: 0; }
+  .layer-label { font-size: 13px; color: var(--muted); align-self: center; }
+  .layer-label strong { display: block; color: var(--text); font-size: 15px; }
+  .boxes { display: flex; flex-wrap: wrap; gap: 10px; }
+  .box {
+    flex: 1 1 170px; border: 1px solid var(--line); background: var(--panel-2);
+    border-radius: 10px; padding: 10px 12px; font-size: 13px;
+  }
+  .box b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .box span { color: var(--muted); }
+  .arrow { text-align: center; color: var(--muted); font-size: 13px; padding: 4px 0; }
+
+  /* Screens */
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 2px solid #f97316; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15), 0 8px 24px rgba(0, 0, 0, 0.5); }
+  figure img { display: block; width: 100%; height: auto; }
+  figure img { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 1000; cursor: zoom-out; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; width: auto; height: auto; border: 2px solid #f97316; border-radius: 8px; box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15), 0 8px 32px rgba(0, 0, 0, 0.7); }
+  .lightbox-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #fff; font-size: 32px; line-height: 1; cursor: pointer; }
+  figcaption { padding: 10px 14px; color: var(--muted); font-size: 13px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td code { white-space: nowrap; }
+
+  /* Flow steps */
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; display: grid; gap: 10px; }
+  ol.steps li {
+    counter-increment: s; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px 14px 12px 56px; position: relative; color: var(--muted);
+  }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #000;
+    display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+  ol.steps li b { color: var(--text); }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px; border-top: 1px solid var(--line); }
+  @media (max-width: 640px) {
+    .layer { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>PLAYlist</h1>
+  <p>A local music library with a web player. Upload audio files, and the app reads their tags and cover art, groups tracks into albums and people, and plays them in a queue.</p>
+  <div class="pill-row">
+    <span class="pill">NestJS 12</span>
+    <span class="pill">Prisma 6</span>
+    <span class="pill">PostgreSQL 17</span>
+    <span class="pill">React 19</span>
+    <span class="pill">Vite 8</span>
+    <span class="pill">Tailwind 4</span>
+    <span class="pill">Zustand</span>
+    <span class="pill">Docker Compose</span>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>System overview</h2>
+    <p class="lead">One Node process serves both the REST API and the built web app. PostgreSQL stores metadata and cover art. Audio files stay on disk.</p>
+
+    <div class="diagram">
+      <div class="layer">
+        <div class="layer-label"><strong>Browser</strong>Desktop and mobile</div>
+        <div class="boxes">
+          <div class="box"><b>React SPA</b><span>Pages, router, TanStack Query</span></div>
+          <div class="box"><b>Player</b><span>Zustand queue, HTML5 audio, shuffle and repeat</span></div>
+        </div>
+      </div>
+      <div class="arrow">HTTP / JSON &middot; multipart uploads &middot; audio and art streams</div>
+      <div class="layer">
+        <div class="layer-label"><strong>App container</strong>Node 24, port 3000</div>
+        <div class="boxes">
+          <div class="box"><b>Static web</b><span>Serves <code>web/dist</code> and SPA deep links</span></div>
+          <div class="box"><b>REST API</b><span><code>/api/*</code> controllers and services</span></div>
+          <div class="box"><b>Metadata reader</b><span>music-metadata: tags, duration, embedded art</span></div>
+          <div class="box"><b>iTunes lookup</b><span>Search helper for filling in track details</span></div>
+        </div>
+      </div>
+      <div class="arrow">Prisma client &middot; file paths</div>
+      <div class="layer">
+        <div class="layer-label"><strong>Data</strong>Two stores</div>
+        <div class="boxes">
+          <div class="box"><b>PostgreSQL 17</b><span>Tracks, albums, people, playlists, art bytes. Port 5432 on the host.</span></div>
+          <div class="box"><b>audio/ folder</b><span>Audio files on disk, mounted into the container at <code>/app/audio</code></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Components</h2>
+    <p class="lead">Backend modules are split by domain. Each one has a controller, a service, and a DTO.</p>
+
+    <div class="grid three">
+      <div class="card">
+        <span class="tag t-web">Web</span>
+        <h3>Pages</h3>
+        <p>Home, Tracks, Search, People, Person, Manage People, Delete Person, Add Person, Album, Track detail and form, Library, Favorites, Playlist.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-web">Web</span>
+        <h3>Player</h3>
+        <p>Bottom bar with prev, play, next, shuffle (left) and repeat (right). Skips tracks with no audio. Queue state is saved in localStorage.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-web">Web</span>
+        <h3>Data layer</h3>
+        <p>TanStack Query for server data. <code>lib/api.ts</code> wraps <code>fetch</code> under <code>/api</code>.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-api">API</span>
+        <h3>Tracks</h3>
+        <p>Upload with metadata, edit, delete, favourite, audio streaming, and cover art.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-api">API</span>
+        <h3>Albums and people</h3>
+        <p>Albums group tracks by name and year. People hold the roles composer, artist, lyricist, and actor.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-api">API</span>
+        <h3>Playlists and languages</h3>
+        <p>User playlists with ordered tracks, plus a language list for tracks.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-api">API</span>
+        <h3>Audio and metadata</h3>
+        <p>Reads tags and embedded art from the uploaded file. Accepts mp3, m4a, and opus only.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-db">Data</span>
+        <h3>Prisma</h3>
+        <p>Schema, migrations, and a typed client. Migrations run on container start.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-fs">Storage</span>
+        <h3>Audio on disk</h3>
+        <p>Files are stored under <code>AUDIO_ROOT</code>. The database stores only the path.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Data model</h2>
+    <p class="lead">The core tables and how they relate.</p>
+    <div class="grid two">
+      <div class="card">
+        <h3>tracks</h3>
+        <p>Name, type (movie or indie), year, language, favourite flag, duration, unique audio path. Belongs to one album and one language.</p>
+      </div>
+      <div class="card">
+        <h3>albums</h3>
+        <p>Name and year, unique together. Cover art is stored once per album and can be replaced from the album page.</p>
+      </div>
+      <div class="card">
+        <h3>people &amp; track_people</h3>
+        <p>People are linked to tracks with a role and a position. A person can hold several roles.</p>
+      </div>
+      <div class="card">
+        <h3>playlists &amp; playlist_tracks</h3>
+        <p>A playlist has ordered tracks. Position is unique within each playlist.</p>
+      </div>
+      <div class="card">
+        <h3>album_artwork</h3>
+        <p>Embedded cover image bytes and MIME type, one row per album. Kept while the album has at least one track, and removed with the album when its last track is deleted.</p>
+      </div>
+      <div class="card">
+        <h3>languages</h3>
+        <p>Unique language names used by tracks.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>API endpoints</h2>
+    <p class="lead">All routes are prefixed with <code>/api</code>.</p>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Area</th><th>Method and path</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Tracks</td><td><code>GET /tracks</code>, <code>GET /tracks/:id</code></td><td>List and read tracks</td></tr>
+          <tr><td>Tracks</td><td><code>POST /tracks</code>, <code>PUT /tracks/:id</code></td><td>Create and update (multipart with optional audio). Admin only.</td></tr>
+          <tr><td>Tracks</td><td><code>DELETE /tracks/:id</code>, <code>PATCH /tracks/:id/favorite</code></td><td>Delete (admin only) and toggle favourite (anyone)</td></tr>
+          <tr><td>Tracks</td><td><code>PATCH /tracks/:id/archive</code></td><td>Archive or restore a track (admin only)</td></tr>
+          <tr><td>Tracks</td><td><code>GET /tracks/:id/audio</code>, <code>GET /tracks/:id/art</code></td><td>Stream audio and cover art</td></tr>
+          <tr><td>Albums</td><td><code>GET /albums/:id</code>, <code>POST /albums/:id/artwork</code></td><td>Album and its tracks; replace cover art (admin only)</td></tr>
+          <tr><td>People</td><td><code>GET /people</code>, <code>POST /people</code>, <code>GET /people/:id</code></td><td>List and read people; create is admin only</td></tr>
+          <tr><td>People</td><td><code>PATCH /people/:id</code>, <code>DELETE /people/:id</code></td><td>Rename (admin only). Delete (admin only) returns 409 while the person still has tracks, including archived ones</td></tr>
+          <tr><td>Auth</td><td><code>GET /auth/check</code>, <code>PUT /auth/token</code></td><td>Verify the <code>x-admin-token</code> header; rotate the token (admin only)</td></tr>
+          <tr><td>Playlists</td><td><code>GET/POST /playlists</code>, <code>GET/PATCH/DELETE /playlists/:id</code></td><td>Manage playlists</td></tr>
+          <tr><td>Playlists</td><td><code>POST /playlists/:id/tracks</code>, <code>POST /playlists/:id/tracks/bulk</code>, <code>DELETE /playlists/:id/tracks/:trackId</code>, <code>PUT /playlists/:id/order</code></td><td>Add one or many tracks (bulk skips duplicates), remove, and reorder</td></tr>
+          <tr><td>Other</td><td><code>GET /languages</code>, <code>GET /itunes/search</code>, <code>GET /health</code></td><td>Languages, iTunes lookup, health check</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Key flows</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3>Uploading a track</h3>
+        <ol class="steps">
+          <li><b>Form</b> sends metadata JSON and the audio file as multipart data.</li>
+          <li><b>Server</b> reads the tags and embedded art with music-metadata.</li>
+          <li><b>Database</b> writes the album, people, track, and art in one transaction.</li>
+          <li><b>Disk</b> keeps the audio file in <code>AUDIO_ROOT</code>.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Playing a queue</h3>
+        <ol class="steps">
+          <li><b>Action</b> (Play album, People section, Home tile) replaces the queue.</li>
+          <li><b>Player</b> loads the next track with audio from <code>/api/tracks/:id/audio</code>.</li>
+          <li><b>No audio</b> on a track: the player skips to the next one.</li>
+          <li><b>End of queue</b> stops, or restarts when repeat is on.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Deployment</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3>Docker Compose</h3>
+        <p><code>db</code> runs <code>postgres:17</code> on <code>127.0.0.1:5432</code> with a volume for data. <code>app</code> builds the image, waits for the database, runs <code>prisma migrate deploy</code>, then starts the server on port 3000. The <code>./audio</code> folder is mounted into the container.</p>
+      </div>
+      <div class="card">
+        <h3>Build</h3>
+        <p>The Dockerfile installs server and web dependencies, runs <code>prisma generate</code>, builds the NestJS server to <code>dist/</code>, and builds the web app to <code>web/dist/</code>. Run <code>./start.sh --build</code> after code changes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Screens</h2>
+    <p class="lead">Mock data, not a real library.</p>
+    <h3>Desktop (1440 × 900)</h3>
+    <div class="shots">
+      <figure>
+        <img src="screenshots/desktop-home.png" alt="Desktop home page with album tiles">
+        <figcaption>Home: album tiles, Refresh, and Shuffle Play</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/desktop-tracks.png" alt="Desktop tracks page with the music player">
+        <figcaption>Tracks: list with the music player docked at the bottom</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/desktop-people.png" alt="Desktop people page">
+        <figcaption>People: top people per role</figcaption>
+      </figure>
+    </div>
+    <h3>Mobile (390 × 844)</h3>
+    <div class="shots">
+      <figure>
+        <img src="screenshots/mobile-home.png" alt="Mobile home page">
+        <figcaption>Home on a phone, with bottom navigation</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/mobile-tracks.png" alt="Mobile tracks page with the music player">
+        <figcaption>Tracks on a phone, with the player above the navigation</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/mobile-people.png" alt="Mobile people page">
+        <figcaption>People on a phone</figcaption>
+      </figure>
+    </div>
+    <p class="lead" style="margin-top:12px">Screenshots use a throwaway database with demo song data and placeholder cover images from picsum, not a real library.</p>
+  </section>
+
+</main>
+
+<footer>PLAYlist architecture overview &middot; see <span class="mono">README.md</span> for setup</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+  <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
+  <img id="lightbox-img" alt="">
+</div>
+
+<script>
+  (function () {
+    var box = document.getElementById('lightbox');
+    var boxImg = document.getElementById('lightbox-img');
+
+    function open(img) {
+      boxImg.src = img.src;
+      boxImg.alt = img.alt;
+      box.classList.add('open');
+    }
+    function close() {
+      box.classList.remove('open');
+    }
+
+    document.querySelectorAll('figure img').forEach(function (img) {
+      img.addEventListener('click', function () { open(img); });
+    });
+    box.addEventListener('click', function (e) {
+      if (e.target === boxImg) return;
+      close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  })();
+</script>
+
+</body>
+</html>

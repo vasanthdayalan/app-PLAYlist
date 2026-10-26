@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: playlist
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-playlist}
+      POSTGRES_DB: playlist
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playlist -d playlist"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    # Run as the host user (UID 1000) so audio files written to ./audio stay owned by you.
+    user: "1000:1000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Optional. Seeds the admin token on first start only; see README "Admin mode".
+    env_file:
+      - path: ./server/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://playlist:${POSTGRES_PASSWORD:-playlist}@db:5432/playlist
+      AUDIO_ROOT: /app/audio
+      PORT: 3000
+      HOST: 0.0.0.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./audio:/app/audio
+
+volumes:
+  db-data:

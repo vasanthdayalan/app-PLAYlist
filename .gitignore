@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+audio/
+*.log
+.DS_Store
+*.code-workspace
+.env
+.env.*
+!.env.example
+devnotes/
+picsum-images/
