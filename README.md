@@ -36,8 +36,9 @@ After changing web code, rebuild the image so the served UI is updated: `./start
 ### Library
 
 - Tracks have metadata (album, year, language, type, people and roles). Albums are unique by name and year.
+- Tabs: **Home** (album cards with Shuffle Play), **Tracks** (full track list), **Search** (filter tracks), **People**, and **Library**.
 - Browse by album, by person (grouped as Composer / Artist / Lyricist / Actor), or by playlist.
-- Favourites and playlists.
+- **Library** holds Favourites and your playlists as tiles. Playlists can be renamed, deleted, and reordered.
 - Track metadata comes from the form. The iTunes lookup shows up to 3 matches; **Use these values** copies one into the form.
 - People can be renamed on the Manage page. They can be deleted on the Delete page or with the (−) button on the People list. A person cannot be deleted while any track (archived included) uses them, and the button is disabled in that case.
 
@@ -62,13 +63,17 @@ After changing web code, rebuild the image so the served UI is updated: `./start
 
 Screenshots use mock data (sample albums, people, and generated audio), not a real library. Cover art is free stock photos from [picsum.photos](https://picsum.photos) (Unsplash photos).
 
-| Home | Album |
-| --- | --- |
-| ![Home page with album cards](./docs/screenshots/home.png) | ![Album page with Play album button and per-track Play](./docs/screenshots/album.png) |
+### Desktop
 
-| Person | Player with queue |
-| --- | --- |
-| ![Person page with Composer, Artist, Lyricist, and Actor sections](./docs/screenshots/person.png) | ![Player bar with shuffle, prev / play / next, repeat, and the open queue](./docs/screenshots/player-queue.png) |
+| Home | Tracks | People |
+| --- | --- | --- |
+| ![Desktop home page with album cards](./docs/screenshots/desktop-home.png) | ![Desktop tracks page](./docs/screenshots/desktop-tracks.png) | ![Desktop people page](./docs/screenshots/desktop-people.png) |
+
+### Mobile
+
+| Home | Tracks | People |
+| --- | --- | --- |
+| ![Mobile home page](./docs/screenshots/mobile-home.png) | ![Mobile tracks page](./docs/screenshots/mobile-tracks.png) | ![Mobile people page](./docs/screenshots/mobile-people.png) |
 
 ## Admin mode
 
