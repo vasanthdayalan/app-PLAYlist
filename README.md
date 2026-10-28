@@ -98,6 +98,27 @@ Run these from the project root:
 
 Editing `ADMIN_TOKEN` alone does nothing while a hash is stored. Step 1 is required.
 
+## Offline Android dashboard
+
+A read-only Android app to browse and search the library, with stats and album art. It works from a snapshot file, so the phone doesn't need the server.
+
+1. **Export the library** (needs the database running, and `DATABASE_URL` in `server/.env`):
+   ```bash
+   cd scripts/export-sqlite
+   npm install
+   npm run export
+   ```
+   This writes `scripts/export-sqlite/out/library.db`, a SQLite file with 300px album art thumbnails.
+2. **Copy it to the phone**, for example with `adb push scripts/export-sqlite/out/library.db /sdcard/Download/`.
+3. **Import it** in the app with the file picker. Re-run the export and copy again whenever the library changes. The APK doesn't need rebuilding for data changes.
+
+**Build the app** (JDK 17, Android SDK platform 34 and build-tools 34.0.0, Gradle 8.10.2):
+```bash
+cd android
+gradle assembleDebug
+```
+The APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`. Install it with `adb install -r`, or copy it to the phone. Use `./gradlew assembleDebug` if your network can reach the Gradle download server; otherwise use the installed `gradle assembleDebug`. Set `sdk.dir` in `android/local.properties` to your SDK path.
+
 ## Notes
 
 - Requirements and decisions: see [REQUIREMENTS.md](./REQUIREMENTS.md).

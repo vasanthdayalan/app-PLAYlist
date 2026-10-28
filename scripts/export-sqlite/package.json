@@ -1,0 +1,18 @@
+{
+  "name": "app-playlist-export-sqlite",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Exports the PLAYlist PostgreSQL library to a read-only SQLite file for the Android dashboard app",
+  "scripts": {
+    "export": "node export.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "pg": "^8.23.1",
+    "sharp": "^0.35.5"
+  }
+}

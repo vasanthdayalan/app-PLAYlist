@@ -11,3 +11,12 @@ audio/
 !.env.example
 devnotes/
 picsum-images/
+scripts/export-sqlite/out/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+library.db
+library.db.tmp
