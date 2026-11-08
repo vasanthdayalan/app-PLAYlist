@@ -20,6 +20,33 @@ Audio files are stored under `./audio` (mounted at `AUDIO_ROOT=/app/audio`). The
 
 Postgres is exposed on host port 5432.
 
+## Backup and restore
+
+A backup has three parts: the database, `server/.env`, and the `audio/` folder. Git holds only the code.
+
+**Back up** (the database container must be running):
+
+```bash
+scripts/backup/backup.sh
+```
+
+This writes `backups/<timestamp>/` with `playlist.dump` (a `pg_dump` custom-format file) and `server.env` (mode 600). The `backups/` folder is gitignored because `server.env` contains secrets. Audio is not included. Copy it separately, for example with `rsync -a audio/ /path/to/backup/audio/`.
+
+**Restore on a new machine:**
+
+1. Install Docker with Compose and clone the repo.
+2. Copy `server.env` to `server/.env`, and copy the `audio/` folder to the project root.
+3. On Linux, make the audio folder writable by UID 1000: `sudo chown -R 1000:1000 audio`.
+4. Start the database, then restore the dump:
+   ```bash
+   docker compose up -d db
+   docker compose exec -T db pg_restore -U playlist -d playlist --clean --if-exists < backups/<timestamp>/playlist.dump
+   ```
+5. Start the app: `./start.sh --build`. Migrations run on start, so the restored schema is kept.
+6. Open http://localhost:3000 and check that tracks play.
+
+The admin token hash is stored in the restored `settings` table, so `ADMIN_TOKEN` in `server/.env` is ignored. Use the token you already have. If you lost it, follow *Recovery* under Admin mode.
+
 ## Development
 
 ```bash

@@ -12,6 +12,7 @@ audio/
 devnotes/
 picsum-images/
 scripts/export-sqlite/out/
+backups/
 android/.gradle/
 android/build/
 android/app/build/
