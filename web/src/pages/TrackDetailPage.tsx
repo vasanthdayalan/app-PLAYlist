@@ -92,7 +92,7 @@ export function TrackDetailPage() {
                 title={archiveLocked ? 'Remove from favorites and playlists before archiving' : t.archived ? 'Unarchive track' : 'Archive track'}
                 disabled={archiveLocked || toggleArchive.isPending}
                 onClick={() => toggleArchive.mutate({ id: t.id, archived: !t.archived })}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-40 ${t.archived ? 'bg-amber-600' : 'bg-neutral-700'}`}
+                className={`relative h-6 w-11 shrink-0 rounded-full border border-neutral-400 transition-colors disabled:cursor-not-allowed ${t.archived ? 'border-amber-300 bg-amber-600' : 'bg-neutral-600'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${t.archived ? 'translate-x-5' : ''}`} />
               </button>

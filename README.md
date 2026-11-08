@@ -79,7 +79,7 @@ Screenshots use mock data (sample albums, people, and generated audio), not a re
 
 The app has two modes. **Normal** (the default) lets anyone browse, play, toggle favourites, and create playlists. **Admin** also enables adding, editing and deleting tracks, and adding, renaming and deleting people. The server enforces this with the `x-admin-token` header on those write routes; hiding buttons alone is not protection.
 
-- **Enter / leave:** use the *Admin mode* control in the sidebar (or above the content on mobile). Admin mode lasts for the browser tab only (`sessionStorage`), and no restart is needed.
+- **Enter / leave:** use the *Admin mode* control in the sidebar (or above the content on mobile). Admin mode is shared across all tabs of the browser (`localStorage`) and lasts until you leave it, and no restart is needed.
 - **Set the token:** add `ADMIN_TOKEN=` (at least 12 characters) to `server/.env` before the first start. It is stored as a salted scrypt hash in the `settings` table. After that, `ADMIN_TOKEN` is ignored, so use the *Change token* control to rotate it.
 - **Not configured:** if no token is stored, admin mode cannot be entered and the write routes return `403`.
 - **Limits:** the token check is not rate-limited. Use a long token, and run the app only on a trusted network.

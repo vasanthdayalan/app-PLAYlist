@@ -7,12 +7,12 @@ interface AdminState {
   setToken: (token: string | null) => void;
 }
 
-// sessionStorage keeps admin mode for this tab only; it is cleared when the tab closes.
+// localStorage shares admin mode across all tabs of this origin, so new tabs stay in admin mode.
 export const useAdminStore = create<AdminState>((set) => ({
-  token: sessionStorage.getItem(STORAGE_KEY),
+  token: localStorage.getItem(STORAGE_KEY),
   setToken: (token) => {
-    if (token) sessionStorage.setItem(STORAGE_KEY, token);
-    else sessionStorage.removeItem(STORAGE_KEY);
+    if (token) localStorage.setItem(STORAGE_KEY, token);
+    else localStorage.removeItem(STORAGE_KEY);
     set({ token });
   },
 }));
